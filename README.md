@@ -1,7 +1,10 @@
 # 42 - GET_NEXT_LINE PROJECT
 
-### Goals
+### Introduction
 This project will not only allow you to add a very convenient function to your collection, but it will also allow you to learn a highly interesting new concept in C programming which are static variables.
+
+## Mandatory Part
+Write a function which returns a line read from a file descriptor.
 
 ### Technical Considerations
 * Calling your function get_next_line in a loop will then allow you to read the text available on the file descriptor one line at a time until the end of it
@@ -16,3 +19,7 @@ This project will not only allow you to add a very convenient function to your c
 * Finally we consider that get_next_line has undefined behavior when reading from a binary file. However, if you wish, you can make this behavior coherent
 * Global variables are forbidden
 * The returned line should include the ’\n’, except if you have reached the end of file and there is no ’\n’
+
+## Bonus Part
+* To succeed get_next_line with a single static variable
+* To be able to manage multiple file descriptors with your get_next_line. For example, if the file descriptors 3, 4 and 5 are accessible for reading, then you can call get_next_line once on 3, once on 4, once again on 3 then once on 5 etc. without losing the reading thread on each of the descriptors
