@@ -6,77 +6,82 @@
 /*   By: gkintana <gkintana@student.42abudhabi.ae>  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/10/10 10:05:53 by gkintana          #+#    #+#             */
-/*   Updated: 2022/01/29 12:50:56 by gkintana         ###   ########.fr       */
+/*   Updated: 2022/07/02 18:48:11 by gkintana         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "get_next_line.h"
 
-static void	ft_free(char **stat_buff, char *set_to)
+static char	*update_static_buffer(char *buffer)
 {
-	free(*stat_buff);
-	*stat_buff = set_to;
-}
-
-static char	*one_line(char **stat_buff)
-{
-	char	*line;
 	char	*temp;
-	int		i;
+	size_t	i;
 
 	i = 0;
-	while (stat_buff[PTR][i] != 0 && stat_buff[PTR][i] != 10)
+	while (buffer[i] && buffer[i] != 10)
 		i++;
-	if (!stat_buff[PTR][i])
+	if (!buffer[i])
 	{
-		line = ft_strdup(&stat_buff[PTR][0]);
-		ft_free(stat_buff, NULL);
+		free(buffer);
+		buffer = NULL;
 	}
 	else
 	{
-		line = ft_substr(&stat_buff[PTR][0], 0, i + 1);
-		temp = ft_strdup(&stat_buff[PTR][i + 1]);
-		ft_free(stat_buff, temp);
-		if (!stat_buff[PTR][0])
-			ft_free(stat_buff, NULL);
+		temp = ft_strdup(buffer + i + 1);
+		free(buffer);
+		buffer = temp;
 	}
+	return (buffer);
+}
+
+static char	*one_line(char *buffer)
+{
+	char	*line;
+	size_t	i;
+
+	i = 0;
+	while (buffer[i] && buffer[i] != 10)
+		i++;
+	line = ft_substr(buffer, 0, i + 1);
 	return (line);
 }
 
-static void	read_fd(int fd, char **stat_buff, char *buffer, ssize_t bytes)
+static char	*read_fd(int fd, char *buffer, char *read_str)
 {
-	char	*store;
+	char	*temp;
+	ssize_t	bytes;
 
-	store = NULL;
+	bytes = read(fd, read_str, BUFFER_SIZE);
+	if (!buffer)
+		buffer = ft_strdup("");
 	while (bytes > 0)
 	{
-		buffer[bytes] = 0;
-		if (!stat_buff[PTR])
-			stat_buff[PTR] = ft_strdup("");
-		store = ft_strjoin(&stat_buff[PTR][0], buffer);
-		ft_free(&stat_buff[PTR], store);
-		if (ft_strchr(stat_buff[PTR], 10))
+		read_str[bytes] = 0;
+		temp = ft_strjoin(buffer, read_str);
+		free(buffer);
+		buffer = temp;
+		if (ft_strchr(buffer, 10))
 			break ;
-		bytes = read(fd, buffer, BUFFER_SIZE);
+		bytes = read(fd, read_str, BUFFER_SIZE);
 	}
-	free(buffer);
+	free(read_str);
+	return (buffer);
 }
 
 char	*get_next_line(int fd)
 {
-	static char	*stat_buff;
-	char		*buffer;
-	ssize_t		bytes;
+	static char	*buffer;
+	char		*string[2];
 
 	if (fd < 0 || BUFFER_SIZE <= 0)
 		return (NULL);
-	buffer = (char *)malloc(sizeof(char) * (BUFFER_SIZE + 1));
-	if (!buffer)
+	string[0] = (char *)malloc(sizeof(char) * (BUFFER_SIZE + 1));
+	if (!string[0])
 		return (NULL);
-	bytes = read(fd, buffer, BUFFER_SIZE);
-	read_fd(fd, &stat_buff, buffer, bytes);
-	if (!stat_buff && bytes <= 0)
+	buffer = read_fd(fd, buffer, string[0]);
+	if (!buffer || !buffer[0])
 		return (NULL);
-	else
-		return (one_line(&stat_buff));
+	string[1] = one_line(buffer);
+	buffer = update_static_buffer(buffer);
+	return (string[1]);
 }
